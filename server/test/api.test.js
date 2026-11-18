@@ -2,6 +2,7 @@ import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
 import { createApp } from '../src/app.js';
+import { mintWpt } from '../src/wimse.js';
 
 describe('wimse-lab API', () => {
   let app;
@@ -39,8 +40,8 @@ describe('wimse-lab API', () => {
   });
 
   it('hop refuses an expired WIT with 401 and a named failure', async () => {
-    const wit = (await request(app).post('/api/mint/wit').send({ workloadId: 'wimse://corp.example.com/gateway', ttlSec: 1 })).body;
-    await new Promise((r) => setTimeout(r, 1100));
+    const wit = (await request(app).post('/api/mint/wit').send({ workloadId: 'wimse://corp.example.com/gateway', ttlSec: 5 })).body;
+    await new Promise((r) => setTimeout(r, 5100));
     const r = await request(app).post('/api/hop').send({
       callerWorkloadId: 'wimse://corp.example.com/gateway',
       targetWorkloadId: 'wimse://corp.example.com/orders',
@@ -80,5 +81,49 @@ describe('wimse-lab API', () => {
     const r = await request(app).post('/api/attack').send({ kind: 'nope' });
     assert.equal(r.status, 400);
     assert.ok(r.body.message);
+  });
+
+  it('replay: presenting the same WPT twice is refused the second time (jti)', async () => {
+    const wit = (await request(app).post('/api/mint/wit').send({ workloadId: 'wimse://corp.example.com/gateway' })).body;
+    const wpt = mintWpt({ targetUri: 'https://orders.example.com/api', wit: {}, witString: wit.witString, signingKey: 'mock-issuer-signing-key' });
+    const first = await request(app).post('/api/hop').send({
+      callerWorkloadId: 'wimse://corp.example.com/gateway',
+      targetWorkloadId: 'wimse://corp.example.com/orders',
+      targetUri: 'https://orders.example.com/api',
+      witString: wit.witString,
+      attack: 'replay-jti',
+      wptString: wpt.token,
+    });
+    assert.equal(first.status, 200);
+    assert.equal(first.body.valid, true);
+    const second = await request(app).post('/api/hop').send({
+      callerWorkloadId: 'wimse://corp.example.com/gateway',
+      targetWorkloadId: 'wimse://corp.example.com/orders',
+      targetUri: 'https://orders.example.com/api',
+      witString: wit.witString,
+      attack: 'replay-jti',
+      wptString: wpt.token,
+    });
+    assert.equal(second.status, 401);
+    assert.ok(second.body.failures.some((f) => f.includes('replay detected')));
+    await request(app).post('/api/reset');
+  });
+
+  it('refuses hostile workload paths (traversal, control and bidi characters)', async () => {
+    for (const bad of [
+      'wimse://corp.example.com/../../etc/passwd',
+      'wimse://corp.example.com/orders\u{202E}admin',
+      'wimse://corp.example.com/or\0ders',
+      'wimse://corp.example.com/a\u200Fb',
+    ]) {
+      const r = await request(app).post('/api/mint/wit').send({ workloadId: bad });
+      assert.equal(r.status, 400, `expected 400 for ${JSON.stringify(bad)}`);
+    }
+  });
+
+  it('refuses ttlSec values outside a sane range', async () => {
+    assert.equal((await request(app).post('/api/mint/wit').send({ workloadId: 'wimse://corp.example.com/orders', ttlSec: -100 })).status, 400);
+    assert.equal((await request(app).post('/api/mint/wit').send({ workloadId: 'wimse://corp.example.com/orders', ttlSec: 100000000 })).status, 400);
+    assert.equal((await request(app).post('/api/mint/wit').send({ workloadId: 'wimse://corp.example.com/orders', ttlSec: 'script' })).status, 400);
   });
 });

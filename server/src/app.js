@@ -90,10 +90,20 @@ export function createApp() {
   // Mint credentials for a workload (step 1 of the flow)
   app.post('/api/mint/wit', (req, res) => {
     const { workloadId, ttlSec } = req.body || {};
-    if (!workloadId || !String(workloadId).startsWith(`wimse://${TRUST_DOMAIN}/`)) {
-      return res.status(400).json({ error: 'invalid_workload_id', message: `workloadId must be wimse://${TRUST_DOMAIN}/<path>` });
+    const prefix = `wimse://${TRUST_DOMAIN}/`;
+    const path = typeof workloadId === 'string' && workloadId.startsWith(prefix) ? workloadId.slice(prefix.length) : null;
+    // Trust-domain hygiene the lab teaches: no traversal, no control/bidi/format characters.
+    const pathOk = path !== null && path.length > 0 && !path.includes('..')
+      && /^[a-zA-Z0-9/_-]+$/.test(path)
+      && !/[\u200B-\u200F\u202A-\u202E\u2066-\u2069]/.test(path);
+    if (!pathOk) {
+      return res.status(400).json({ error: 'invalid_workload_id', message: `workloadId must be ${prefix}<path> with a clean path (no traversal or invisible characters)` });
     }
-    const wit = mintWit({ workloadId, issuer: ISSUER.issuer, signingKey: SIGNING_KEY, ttlSec: Number(ttlSec) || 300 });
+    const ttl = Number(ttlSec);
+    if (ttlSec !== undefined && (!Number.isFinite(ttl) || ttl < 5 || ttl > 3600)) {
+      return res.status(400).json({ error: 'invalid_ttl', message: 'ttlSec must be a number between 5 and 3600' });
+    }
+    const wit = mintWit({ workloadId, issuer: ISSUER.issuer, signingKey: SIGNING_KEY, ttlSec: ttlSec === undefined ? 300 : ttl });
     res.json({ ...wit, witString: wit.token, issuer: ISSUER.issuer, trustDomain: TRUST_DOMAIN });
   });
 
@@ -116,7 +126,7 @@ export function createApp() {
 
     // The callee mints a WPT binding the WIT and context, as the caller would
     let wpt = mintWpt({ targetUri, wit: {}, witString, signingKey: SIGNING_KEY, txnToken: txnString });
-    if (attack === 'replay') {
+    if (attack === 'replay' || attack === 'replay-jti') {
       wpt = { ...wpt, token: (req.body.wptString) || wpt.token };
     }
     if (attack === 'wrong-aud') {
