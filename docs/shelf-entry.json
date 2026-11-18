@@ -1,0 +1,10 @@
+{
+  "id": "wimse-lab",
+  "name": "WIMSE Lab",
+  "catalogId": "D137",
+  "tier": "Demo",
+  "port": 7822,
+  "description": "Mock IETF WIMSE lab: trust domains, Workload Identity Tokens and Workload Proof Tokens across a multi-hop call chain.",
+  "composeFile": "wimse-lab-LAB/docker-compose.yml",
+  "pingProducts": []
+}

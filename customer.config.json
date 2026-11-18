@@ -1,0 +1,9 @@
+{
+  "brandName": "WIMSE Lab",
+  "vocabulary": {
+    "workload": "workload",
+    "trustDomain": "trust domain",
+    "chain": "call chain"
+  },
+  "accent": "#b3121b"
+}

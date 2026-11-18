@@ -1,0 +1,16 @@
+services:
+  wimse-lab:
+    build: .
+    image: wimse-lab:local
+    container_name: wimse-lab
+    ports:
+      - "127.0.0.1:7822:7822"
+    environment:
+      - PORT=7822
+      - NODE_ENV=production
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true

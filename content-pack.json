@@ -1,0 +1,13 @@
+{
+  "id": "wimse-lab",
+  "title": "WIMSE Lab",
+  "summary": "IETF WIMSE mock: trust domains, Workload Identity Tokens (WIT), Workload Proof Tokens (WPT), and a multi-hop chain where every hop is verified and cryptographically bound.",
+  "verticals": ["default"],
+  "cards": [
+    { "id": "trust-domain", "title": "Trust domain", "body": "The administrative scope for workload identities. Our issuer is authorized for {{cast.trustDomain}} only; a credential naming another domain is refused even when our own key signed it." },
+    { "id": "wit", "title": "Workload Identity Token (WIT)", "body": "A JWT naming the workload ({{cast.witSub}}) with a cnf.jwk confirmation key. A WIT is never bearer: possession of the matching private key must be proven." },
+    { "id": "wpt", "title": "Workload Proof Token (WPT)", "body": "A per-request JWT sent as Authorization: WPT <token>. Claims: aud = exact target URI, exp = seconds, jti = replay protection, wth = hash of the WIT, tth = hash of the Txn-Token for {{cast.user}}." },
+    { "id": "chain", "title": "Multi-hop chain", "body": "{{cast.gateway}} → {{cast.orders}} → {{cast.billing}}. Every hop presents WIT + WPT + Txn-Token and every hop is validated." },
+    { "id": "break-it", "title": "Break it on purpose", "body": "Wrong audience, swapped user context (tth), swapped workload (wth), expired WIT, rogue trust domain — each shows the exact refusal." }
+  ]
+}
