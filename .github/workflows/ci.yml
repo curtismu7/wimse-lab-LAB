@@ -13,7 +13,7 @@ jobs:
         with:
           node-version: 26
       - name: Install server deps
-        run: npm install --prefix server express --no-save
+        run: npm install --prefix server express supertest --no-save
       - name: Server tests
         run: node --test server/test/*.test.js
       - name: Web build
