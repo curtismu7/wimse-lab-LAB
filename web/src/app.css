@@ -22,7 +22,7 @@
 
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; }
-.lab { max-width: 1600px; margin: 0 auto; padding: 16px; }
+.lab { max-width: 2200px; margin: 0 auto; padding: 20px 24px 48px; }
 
 .shell-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; border-bottom: 3px solid var(--accent); padding-bottom: 12px; margin-bottom: 16px; }
 .shell-bar h1 { margin: 0; font-size: 1.6rem; }
@@ -51,3 +51,25 @@ select, input { background: var(--bg); color: var(--text); border: 1px solid var
 .muted { color: var(--muted); font-size: 0.95rem; }
 .json { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px; font-size: 0.9rem; overflow-wrap: anywhere; white-space: pre-wrap; }
 footer { margin: 16px 0; }
+
+/* Diagram: shared box roles (--box-* tokens from standalone-ui.css), kit arrows, active-hop accent */
+.wlab-canvas { height: 460px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+.wlab-node { padding: 14px 16px; min-width: 110px; max-width: 190px; text-align: center; font-weight: 600; color: var(--on-box); background: var(--box-grey); border: 2px solid var(--box-grey); border-radius: 8px; }
+.wlab-node--gateway { background: var(--box-dark); border-color: var(--box-dark); }
+.wlab-node--idp { background: var(--box-blue); border-color: var(--box-blue); }
+.wlab-node--resource { background: var(--box-grey); border-color: var(--box-grey); }
+.wlab-node--on { box-shadow: 0 0 0 3px var(--accent); }
+.wlab-handle { opacity: 0; pointer-events: none; }
+.wlab-edge path { stroke: var(--muted); stroke-width: 1.6; }
+.wlab-edge--now path { stroke: var(--accent); stroke-width: 3.2; }
+.wlab-edge--dim { opacity: 0.3; }
+.wlab-canvas .react-flow__controls { box-shadow: none; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.wlab-canvas .react-flow__controls-button { background: var(--surface); color: var(--text); border-bottom: 1px solid var(--border); }
+.wlab-canvas .react-flow__controls-button:hover { background: var(--bg); }
+.wlab-canvas .react-flow__controls-button svg { fill: currentColor; }
+.wlab-canvas .react-flow__background { background: var(--bg); }
+.wlab-node.dk-open { min-width: 18rem; max-width: 22rem; text-align: left; font-weight: 400; }
+.wlab-node.dk-open .dk-passport { font-weight: 400; }
+.track__now { margin: 8px 0; padding: 10px 12px; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 6px; }
+.track__now h3 { margin: 0 0 4px; font-size: 0.95rem; }
+.track__now p { margin: 0; font-size: 0.9rem; }
