@@ -243,7 +243,7 @@ export default function App() {
 
       <section className="cards">
         <div className="card">
-          <h2>Chain</h2>
+          <h2><span className="step-num" aria-hidden="true">1</span>Chain</h2>
           <p>Issuer mints a Workload Identity Token (WIT) for the gateway. A context service mints a Txn-Token for Alice. Every hop presents WIT + WPT (Workload Proof Token) + Txn-Token; the WPT&apos;s wth/tth claims cryptographically bind them together. Click any box for its details.</p>
           <DiagramStepBar stepper={stepper} caption={step ? step.label : ""} testId="wlab-step-bar" />
           {step && (
@@ -262,7 +262,7 @@ export default function App() {
         </div>
 
         <div className="card">
-          <h2>Break it</h2>
+          <h2><span className="step-num" aria-hidden="true">2</span>Break it</h2>
           <p>Each attack shows the exact refusal the WIMSE validation chain produces.</p>
           <div className="attack-grid">
             {ATTACKS.map((a) => (
@@ -275,7 +275,7 @@ export default function App() {
       </section>
 
       <section className="result card">
-        <h2>Result</h2>
+        <h2><span className="step-num" aria-hidden="true">3</span>Result</h2>
         {!result && <p className="muted">Run the chain or an attack.</p>}
         {result?.error && <p className="fail">{result.error}</p>}
         {result?.attack && (
