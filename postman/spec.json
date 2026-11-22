@@ -1,0 +1,59 @@
+{
+  "name": "WIMSE Lab",
+  "slug": "wimse-lab",
+  "description": "API collection for WIMSE Lab: mint WIMSE Workload Identity Tokens (wit+jwt, EdDSA) and Transaction Tokens (txn+jwt) chained from a WIT, validate the hop binding (tth), and run the attack suite (wrong aud, swapped Txn-Token, swapped WIT, expired, untrusted domain). Keys are in-process and labelled; the lab has no live mode.",
+  "baseUrl": "http://localhost:7822",
+  "env": {},
+  "variables": {
+    "WIT": "filled by the Mint a WIT request's test script",
+    "TXN": "filled by the Mint a Txn-Token request's test script"
+  },
+  "folders": [
+    {
+      "name": "Sanity",
+      "description": "Health and build info.",
+      "requests": [
+        { "name": "Health", "method": "GET", "path": "/api/health",
+          "tests": ["pm.response.to.have.status(200);", "pm.expect(pm.response.json().status).to.eql('ok');"] },
+        { "name": "Info", "method": "GET", "path": "/api/info",
+          "tests": ["pm.response.to.have.status(200);"] }
+      ]
+    },
+    {
+      "name": "Mint and hop",
+      "description": "Mint a WIT (workloadId must be a clean wimse:// URI), chain a Txn-Token from it (sub is the end user), then validate the hop: the Txn-Token's tth must match the WIT. Both tokens chain via collection variables.",
+      "requests": [
+        { "name": "Mint a WIT", "method": "POST", "path": "/api/mint/wit",
+          "body": { "workloadId": "wimse://corp.example.com/payments/agent" },
+          "tests": ["pm.response.to.have.status(200);", "pm.expect(pm.response.json().token).to.include('.');", "pm.collectionVariables.set('WIT', pm.response.json().token);"] },
+        { "name": "Mint a WIT with a traversal path (negative)", "method": "POST", "path": "/api/mint/wit",
+          "body": { "workloadId": "wimse://corp.example.com/../etc" },
+          "tests": ["pm.expect(pm.response.code).to.eql(400);", "pm.expect(pm.response.json().error).to.eql('invalid_workload_id');"] },
+        { "name": "Mint a Txn-Token from the WIT", "method": "POST", "path": "/api/mint/txn",
+          "body": { "witString": "{{WIT}}", "sub": "alice" },
+          "tests": ["pm.response.to.have.status(200);", "pm.expect(pm.response.json().token).to.include('.');", "pm.collectionVariables.set('TXN', pm.response.json().token);"] },
+        { "name": "Hop validation (tth matches)", "method": "POST", "path": "/api/hop",
+          "body": { "witString": "{{WIT}}", "txnString": "{{TXN}}" },
+          "tests": ["pm.response.to.have.status(200);", "pm.expect(pm.response.json().valid).to.eql(true);"] },
+        { "name": "Hop without a WIT (negative)", "method": "POST", "path": "/api/hop",
+          "body": {},
+          "tests": ["pm.expect(pm.response.code).to.eql(400);", "pm.expect(pm.response.json().error).to.eql('missing_wit');"] }
+      ]
+    },
+    {
+      "name": "Attack suite",
+      "description": " kinds: wrong-aud, swap-txn, swap-wit, expired, untrusted-domain. Each returns valid:false with the failure that caught it.",
+      "requests": [
+        { "name": "Attack: swap-txn (present someone else's Txn-Token)", "method": "POST", "path": "/api/attack",
+          "body": { "kind": "swap-txn", "txnString": "{{TXN}}" },
+          "tests": ["pm.response.to.have.status(200);", "pm.expect(pm.response.json().valid).to.eql(false);", "pm.expect(pm.response.json().failures.length).to.be.above(0);"] },
+        { "name": "Attack: expired", "method": "POST", "path": "/api/attack",
+          "body": { "kind": "expired" },
+          "tests": ["pm.response.to.have.status(200);", "pm.expect(pm.response.json().valid).to.eql(false);"] },
+        { "name": "Attack: unknown kind (negative)", "method": "POST", "path": "/api/attack",
+          "body": { "kind": "nope" },
+          "tests": ["pm.expect(pm.response.code).to.eql(400);", "pm.expect(pm.response.json().error).to.eql('unknown_attack');"] }
+      ]
+    }
+  ]
+}
