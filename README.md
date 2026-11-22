@@ -14,6 +14,15 @@ A mock, fully offline lab for the IETF **WIMSE** (Workload Identity in Multi Sys
 
 ## Run
 
+### Postman
+
+`postman/wimse-lab.postman_collection.json` drives the token flow without the UI: mint a WIT (with the traversal-path negative), chain a Txn-Token from it, validate the hop binding (tth), and run the attack suite (swap-txn, expired, unknown-kind negative). Tokens chain via collection variables; no environment needed — the keys are in-process and labelled.
+
+```
+node ../../shared/postman/generator.mjs --spec postman/spec.json            # regenerate (never hand-edit the output)
+npx newman run postman/wimse-lab.postman_collection.json
+```
+
 ```bash
 npm install && npm run build && npm start   # http://127.0.0.1:7822
 # or
