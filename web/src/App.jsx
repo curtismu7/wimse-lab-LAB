@@ -215,6 +215,7 @@ export default function App() {
       <header className="shell-bar">
         <h1>WIMSE Lab</h1>
         <TopMenu
+          postman={{ repo: "curtismu7/wimse-lab-LAB", slug: "wimse-lab" }}
           mode={{ value: mode, onChange: switchMode, realAvailable: info?.realAvailable, realHint: info?.realHint }}
           theme={{ value: theme, onChange: setTheme }}
           fontSize={{ value: fontSize, onChange: setFontSize }}
